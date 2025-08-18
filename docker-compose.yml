@@ -1,17 +1,18 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  minio:
-    image: minio/minio
-    volumes:
-      - minio_data:/data
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    minio:
+        image: minio/minio
+        volumes:
+            - minio_data:/data
+            - ./init-minio.sh:/init-minio.sh # Mount the initialization script
+        environment:
+            - MINIO_ROOT_USER=minioadmin
+            - MINIO_ROOT_PASSWORD=minioadmin
+        entrypoint: ['/bin/sh', '-c', '/init-minio.sh'] # Override entrypoint to run script
+        ports:
+            - '9000:9000'
+            - '9001:9001'
 
 volumes:
-  minio_data:
+    minio_data:

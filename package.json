@@ -1,0 +1,36 @@
+{
+    "name": "assosa-shop-file-server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node -r tsconfig-paths/register dist/index.js",
+        "build": "tsc --project tsconfig.json",
+        "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only --watch src src/index.ts",
+        "lint": "eslint src --ext .ts",
+        "format": "prettier --write src/**/*.ts"
+    },
+    "keywords": [],
+    "author": "",
+    "dependencies": {
+        "compression": "^1.8.1",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
+        "express": "^5.1.0",
+        "helmet": "^8.1.0",
+        "morgan": "^1.10.1",
+        "winston": "^3.17.0"
+    },
+    "devDependencies": {
+        "@types/compression": "^1.8.1",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
+        "@types/morgan": "^1.9.10",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.9.2"
+    },
+    "license": "ISC",
+    "packageManager": "pnpm@10.14.0"
+}

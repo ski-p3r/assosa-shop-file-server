@@ -9,7 +9,7 @@ const minioClient = new Client({
     accessKey: process.env.MINIO_ACCESS_KEY!,
     secretKey: process.env.MINIO_SECRET_KEY!,
 });
-const ENDPOINT = process.env.MINIO_ENDPOINT!;
+const CURRENT_IP = process.env.CURRENT_IP!;
 const PORT = Number(process.env.MINIO_PORT);
 const BUCKET = process.env.MINIO_BUCKET!;
 const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN!;
@@ -22,7 +22,6 @@ export async function uploadToMinio(
     if (token !== UPLOAD_TOKEN) {
         throw new Error('Invalid upload token');
     }
-    // Ensure bucket exists
     const exists = await minioClient.bucketExists(BUCKET);
     if (!exists) {
         await minioClient.makeBucket(BUCKET, 'us-east-1');
@@ -31,15 +30,8 @@ export async function uploadToMinio(
     await minioClient.putObject(BUCKET, objectName, file.buffer, file.size, {
         'Content-Type': file.mimetype,
     });
-    // Build full URL
-    let host = process.env.HOST;
-    let port = process.env.PORT;
-    if (req && req.protocol && req.get) {
-        host = req.get('host');
-        port = '';
-    }
     const protocol = req && req.protocol ? req.protocol : 'http';
-    const fullUrl = `${protocol}://${ENDPOINT}${
+    const fullUrl = `${protocol}://${CURRENT_IP}${
         PORT && String(PORT) !== '80' && String(PORT) !== '443'
             ? `:${PORT}`
             : ''

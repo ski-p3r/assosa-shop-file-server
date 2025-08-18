@@ -5,14 +5,41 @@ services:
         image: minio/minio
         volumes:
             - minio_data:/data
-            - ./init-minio.sh:/init-minio.sh # Mount the initialization script
+            - ./init-minio.sh:/init-minio.sh
         environment:
             - MINIO_ROOT_USER=minioadmin
             - MINIO_ROOT_PASSWORD=minioadmin
-        entrypoint: ['/bin/sh', '-c', '/init-minio.sh'] # Override entrypoint to run script
+        entrypoint:
+            - /bin/sh
+            - -c
+            - chmod +x /init-minio.sh && /init-minio.sh
         ports:
             - '9000:9000'
             - '9001:9001'
+        healthcheck:
+            test:
+                - CMD
+                - curl
+                - -f
+                - http://localhost:9000/minio/health/live
+            interval: 30s
+            timeout: 10s
+            retries: 3
+
+    backend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - .:/app
+            - ./.env:/app/.env
+        ports:
+            - '8001:8001'
+        depends_on:
+            minio:
+                condition: service_healthy
+        command: >
+            sh -c "pnpm install && pnpm build && pnpm start"
 
 volumes:
     minio_data:

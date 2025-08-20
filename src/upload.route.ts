@@ -25,4 +25,13 @@ router.post(
     }
 );
 
+router.post('/generate-invoice', async (req: Request, res: Response) => {
+    try {
+        const { generateInvoice } = await import('./utils/generator');
+        await generateInvoice(req, res);
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

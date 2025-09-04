@@ -12,17 +12,11 @@ mc alias set myminio http://localhost:9000 minioadmin minioadmin
 # Create the uploads bucket if it doesn't exist
 mc mb myminio/uploads --ignore-existing
 
-# Create a custom policy file for the uploads bucket
+# Create a private policy file for the uploads bucket
 cat <<EOF >/tmp/uploads-policy.json
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {"AWS": "*"},
-      "Action": ["s3:GetObject"],
-      "Resource": ["arn:aws:s3:::uploads/*"]
-    },
     {
       "Effect": "Allow",
       "Principal": {"AWS": "minioadmin"},
@@ -33,7 +27,7 @@ cat <<EOF >/tmp/uploads-policy.json
 }
 EOF
 
-# Apply the custom policy to the uploads bucket
+# Apply the private policy to the uploads bucket
 mc policy set-json /tmp/uploads-policy.json myminio/uploads
 
 # Keep the container running by waiting for the MinIO process

@@ -30,7 +30,7 @@ export async function uploadToMinio(
         'Content-Type': file.mimetype,
     });
     const protocol = req && req.protocol ? req.protocol : 'http';
-    const fullUrl = `${protocol}://${CURRENT_IP}/${BUCKET}/${objectName}`;
+    const fullUrl = `${protocol}://${CURRENT_IP}:${process.env.MINIO_PORT}/${BUCKET}/${objectName}`;
     return {
         url: fullUrl,
         objectName,

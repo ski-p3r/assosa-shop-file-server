@@ -10,7 +10,6 @@ const minioClient = new Client({
     secretKey: process.env.MINIO_SECRET_KEY!,
 });
 const CURRENT_IP = process.env.CURRENT_IP!;
-const PORT = Number(process.env.MINIO_PORT);
 const BUCKET = process.env.MINIO_BUCKET!;
 const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN!;
 
@@ -31,11 +30,7 @@ export async function uploadToMinio(
         'Content-Type': file.mimetype,
     });
     const protocol = req && req.protocol ? req.protocol : 'http';
-    const fullUrl = `${protocol}://${CURRENT_IP}${
-        PORT && String(PORT) !== '80' && String(PORT) !== '443'
-            ? `:${PORT}`
-            : ''
-    }/${BUCKET}/${objectName}`;
+    const fullUrl = `${protocol}://${CURRENT_IP}/${BUCKET}/${objectName}`;
     return {
         url: fullUrl,
         objectName,

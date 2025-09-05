@@ -29,7 +29,7 @@ export async function uploadToMinio(
     await minioClient.putObject(BUCKET, objectName, file.buffer, file.size, {
         'Content-Type': file.mimetype,
     });
-    const fullUrl = `https://file.zumbarashop.com/${BUCKET}/${objectName}`;
+    const fullUrl = `https://files.zumbarashop.com/${BUCKET}/${objectName}`;
     return {
         url: fullUrl,
         objectName,

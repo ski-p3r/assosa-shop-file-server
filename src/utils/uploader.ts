@@ -29,8 +29,7 @@ export async function uploadToMinio(
     await minioClient.putObject(BUCKET, objectName, file.buffer, file.size, {
         'Content-Type': file.mimetype,
     });
-    const protocol = req && req.protocol ? req.protocol : 'http';
-    const fullUrl = `${protocol}://${CURRENT_IP}:${process.env.MINIO_PORT}/${BUCKET}/${objectName}`;
+    const fullUrl = `https://file.zumbarashop.com/${BUCKET}/${objectName}`;
     return {
         url: fullUrl,
         objectName,

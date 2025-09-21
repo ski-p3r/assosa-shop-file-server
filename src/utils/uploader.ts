@@ -1,19 +1,19 @@
-import { Client } from 'minio';
+import fs from 'fs';
+import path from 'path';
 import dotenv from 'dotenv';
+import type { Express } from 'express';
 dotenv.config();
 
-const minioClient = new Client({
-    endPoint: process.env.MINIO_ENDPOINT!,
-    port: Number(process.env.MINIO_PORT),
-    useSSL: false,
-    accessKey: process.env.MINIO_ACCESS_KEY!,
-    secretKey: process.env.MINIO_SECRET_KEY!,
-});
-const CURRENT_IP = process.env.CURRENT_IP!;
-const BUCKET = process.env.MINIO_BUCKET!;
+const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN!;
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:8001';
 
-export async function uploadToMinio(
+// Ensure upload directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+export async function uploadToLocal(
     file: Express.Multer.File,
     token: string,
     req?: any
@@ -21,18 +21,20 @@ export async function uploadToMinio(
     if (token !== UPLOAD_TOKEN) {
         throw new Error('Invalid upload token');
     }
-    const exists = await minioClient.bucketExists(BUCKET);
-    if (!exists) {
-        await minioClient.makeBucket(BUCKET, 'us-east-1');
-    }
+
     const objectName = Date.now() + '-' + file.originalname;
-    await minioClient.putObject(BUCKET, objectName, file.buffer, file.size, {
-        'Content-Type': file.mimetype,
-    });
-    const fullUrl = `https://files.zumbarashop.com/${BUCKET}/${objectName}`;
+    const filePath = path.join(UPLOAD_DIR, objectName);
+
+    // Write file to local storage
+    fs.writeFileSync(filePath, file.buffer);
+
+    const fullUrl = `${SERVER_URL}/files/${objectName}`;
     return {
         url: fullUrl,
         objectName,
-        bucket: BUCKET,
+        filePath,
     };
 }
+
+// Keep backward compatibility by exporting with original name
+export const uploadToMinio = uploadToLocal;

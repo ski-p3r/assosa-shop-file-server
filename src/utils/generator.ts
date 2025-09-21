@@ -1,7 +1,8 @@
 import PDFDocument from 'pdfkit';
 import { PassThrough } from 'stream';
 import { uploadToMinio } from './uploader';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import type { Express } from 'express';
 
 interface InvoiceItem {
     product: string;
@@ -52,44 +53,52 @@ export async function generateInvoice(req: Request, res: Response) {
     doc.pipe(stream);
     stream.on('data', (chunk) => buffers.push(chunk));
 
+    const primaryColor = '#003cffff'; // Dark blue
     const textColor = '#111827';
     const grayColor = '#6B7280';
-    const lightGray = '#F3F4F6';
+    const lightGray = '#F8FAFC';
+    const accentColor = '#00ffe5ff'; // Cyan accent
 
     // === HEADER ===
     doc.font('Helvetica-Bold')
-        .fontSize(24)
-        .fillColor(textColor)
-        .text('INVOICE', 40, 40);
+        .fontSize(28)
+        .fillColor(primaryColor)
+        .text('ZUMBARA SHOP', 40, 40);
+    doc.fontSize(14).fillColor(textColor).text('INVOICE', 40, 75);
     doc.fontSize(12)
         .fillColor(grayColor)
-        .text(`#${data.invoiceNumber}`, 40, 70);
+        .text(`#${data.invoiceNumber}`, 40, 95);
 
     doc.fontSize(14)
         .fillColor(textColor)
-        .text(data.shopName, doc.page.width - 250, 40, {
+        .text('Zumbara Shop', doc.page.width - 250, 40, {
             width: 200,
             align: 'right',
         });
     doc.fontSize(10).fillColor(grayColor);
-    doc.text(data.shopAddress, doc.page.width - 250, 60, {
+    doc.text(
+        '123 Commerce Street, Business District',
+        doc.page.width - 250,
+        60,
+        {
+            width: 200,
+            align: 'right',
+        }
+    );
+    doc.text('support@zumbarashop.com', doc.page.width - 250, 75, {
         width: 200,
         align: 'right',
     });
-    doc.text(data.shopEmail, doc.page.width - 250, 75, {
-        width: 200,
-        align: 'right',
-    });
-    doc.text(data.shopPhone, doc.page.width - 250, 90, {
+    doc.text('+251-911-123-456', doc.page.width - 250, 90, {
         width: 200,
         align: 'right',
     });
 
     // === BILLING & SHIPPING ===
-    docස: doc.moveDown(3);
+    doc.moveDown(3);
     doc.font('Helvetica-Bold')
         .fontSize(12)
-        .fillColor(textColor)
+        .fillColor(primaryColor)
         .text('Billing Details', 40, 130);
     doc.text('Shipping Details', 300, 130);
 
@@ -117,8 +126,8 @@ export async function generateInvoice(req: Request, res: Response) {
     const rowHeight = 15;
 
     const drawTableHeader = () => {
-        doc.rect(tableLeft, tableTop, tableWidth, 20).fill(lightGray);
-        doc.fillColor(textColor).font('Helvetica-Bold').fontSize(10);
+        doc.rect(tableLeft, tableTop, tableWidth, 20).fill(primaryColor);
+        doc.fillColor('white').font('Helvetica-Bold').fontSize(10);
         headers.forEach((header, i) => {
             doc.text(
                 header,
@@ -136,14 +145,14 @@ export async function generateInvoice(req: Request, res: Response) {
 
     const drawRow = (item: InvoiceItem, y: number, index: number) => {
         if (index % 2 === 0) {
-            doc.rect(tableLeft, y - 5, tableWidth, rowHeight).fill('#FAFAFA');
+            doc.rect(tableLeft, y - 5, tableWidth, rowHeight).fill(lightGray);
         }
         doc.fillColor(textColor).font('Helvetica').fontSize(10);
         const cells = [
             item.product,
             item.quantity.toString(),
-            `$${item.price.toFixed(2)}`,
-            `$${item.total.toFixed(2)}`,
+            `ETB ${item.price.toFixed(2)}`,
+            `ETB ${item.total.toFixed(2)}`,
         ];
         cells.forEach((cell, i) => {
             doc.text(
@@ -178,18 +187,22 @@ export async function generateInvoice(req: Request, res: Response) {
     const totalsX = doc.page.width - 220;
     const totalsY = rowY + 10;
     doc.rect(totalsX, totalsY, 180, 70).fill(lightGray);
+    doc.strokeColor(accentColor)
+        .lineWidth(2)
+        .rect(totalsX, totalsY, 180, 70)
+        .stroke();
     doc.fillColor(textColor).fontSize(10).font('Helvetica');
     doc.text('Subtotal:', totalsX + 10, totalsY + 10);
-    doc.text(`$${data.subtotal.toFixed(2)}`, totalsX + 100, totalsY + 10, {
+    doc.text(`ETB ${data.subtotal.toFixed(2)}`, totalsX + 100, totalsY + 10, {
         align: 'right',
     });
     doc.text('Shipping:', totalsX + 10, totalsY + 25);
-    doc.text(`$${data.shipping.toFixed(2)}`, totalsX + 100, totalsY + 25, {
+    doc.text(`ETB ${data.shipping.toFixed(2)}`, totalsX + 100, totalsY + 25, {
         align: 'right',
     });
-    doc.font('Helvetica-Bold').fontSize(12).fillColor(textColor);
+    doc.font('Helvetica-Bold').fontSize(12).fillColor(primaryColor);
     doc.text('Total:', totalsX + 10, totalsY + 45);
-    doc.text(`$${data.total.toFixed(2)}`, totalsX + 100, totalsY + 45, {
+    doc.text(`ETB ${data.total.toFixed(2)}`, totalsX + 100, totalsY + 45, {
         align: 'right',
     });
 
@@ -200,6 +213,10 @@ export async function generateInvoice(req: Request, res: Response) {
         paymentY = 40;
     }
     doc.rect(40, paymentY, doc.page.width - 80, 40).fill(lightGray);
+    doc.strokeColor(accentColor)
+        .lineWidth(1)
+        .rect(40, paymentY, doc.page.width - 80, 40)
+        .stroke();
     doc.fillColor(textColor).fontSize(10).font('Helvetica');
     doc.text(`Payment Method: ${data.paymentMethod}`, 50, paymentY + 10);
     doc.text(`Transaction ID: ${data.transactionId}`, 50, paymentY + 25);
@@ -212,10 +229,15 @@ export async function generateInvoice(req: Request, res: Response) {
     }
     doc.fillColor(grayColor)
         .fontSize(9)
-        .text(data.footerNote, 40, footerY, {
-            align: 'center',
-            width: doc.page.width - 80,
-        });
+        .text(
+            'Thank you for shopping with Zumbara Shop! For support, contact us at support@zumbarashop.com',
+            40,
+            footerY,
+            {
+                align: 'center',
+                width: doc.page.width - 80,
+            }
+        );
 
     doc.end();
 

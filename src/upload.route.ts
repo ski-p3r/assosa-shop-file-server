@@ -1,11 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import multer from 'multer';
 import { uploadToMinio } from './utils/uploader';
 
 const upload = multer({ storage: multer.memoryStorage() });
-const router = Router();
+const uploadRouter = Router();
 
-router.post(
+uploadRouter.post(
     '/upload',
     upload.single('file'),
     async (req: Request, res: Response) => {
@@ -25,7 +25,7 @@ router.post(
     }
 );
 
-router.post('/generate-invoice', async (req: Request, res: Response) => {
+uploadRouter.post('/generate-invoice', async (req: Request, res: Response) => {
     try {
         const { generateInvoice } = await import('./utils/generator');
         await generateInvoice(req, res);
@@ -34,4 +34,4 @@ router.post('/generate-invoice', async (req: Request, res: Response) => {
     }
 });
 
-export default router;
+export default uploadRouter;
